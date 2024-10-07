@@ -4,7 +4,7 @@ const blacklistToken =
   "INSERT INTO token_blacklist (token, expires_at) VALUES ($1, $2)";
 const isTokenBlacklisted = "SELECT * FROM token_blacklist WHERE token = $1";
 const changeRole =
-  "UPDATE user SET role = CASE WHEN role = 'жолаушы' THEN 'жүргізуші' WHEN role = 'жүргізуші' THEN 'жолаушы' ELSE role END WHERE id = $1;";
+  "UPDATE users SET role = CASE WHEN role = 'жолаушы' THEN 'жүргізуші' WHEN role = 'жүргізуші' THEN 'жолаушы' ELSE role END WHERE id = $1;";
 const updateActivation = `
   UPDATE users
   SET account_activated_until = NOW() + INTERVAL CASE 

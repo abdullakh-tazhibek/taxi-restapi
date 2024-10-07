@@ -14,27 +14,21 @@ cron.schedule("0 0 * * *", () => {
 });
 
 const createOrder = async (req, res) => {
-  const { driverData } = req.body;
+  const { location1, location2, count, date, comment, price } = req.body;
 
-  if (driverData) {
-    const { location1, location2, count, date, comment, price } = driverData;
-
-    try {
-      await pool.query(queries.createOrder, [
-        location1,
-        location2,
-        count,
-        date,
-        comment,
-        price,
-      ]);
-      res.status(201).send("Сіздің тапсырысыңыз сәтті жарияланды!");
-    } catch (error) {
-      console.error("Database error:", error.message);
-      res.status(500).json({ error: "Тапсырыста қателік бар!" });
-    }
-  } else {
-    res.status(400).json({ error: "Формат дұрыс емес" });
+  try {
+    await pool.query(queries.createOrder, [
+      location1,
+      location2,
+      count,
+      date,
+      comment,
+      price,
+    ]);
+    res.status(201).send("Сіздің тапсырысыңыз сәтті жарияланды!");
+  } catch (error) {
+    console.error("Database error:", error.message);
+    res.status(500).json({ error: "Тапсырыста қателік бар!" });
   }
 };
 
@@ -71,9 +65,19 @@ const getDriverList = (req, res) => {
   });
 };
 
+const getDriverOrder = (req, res) => {
+  pool.query(queries.getDriverOrder, (error, results) => {
+    if (error) {
+      throw error;
+    }
+    res.status(200).json(results.rows);
+  });
+};
+
 module.exports = {
   createOrder,
   deleteExpOrder,
   deleteByUser,
   getDriverList,
+  getDriverOrder,
 };

@@ -3,10 +3,12 @@ const createOrder =
 const deleteExpOrder = "DELETE FROM createpass WHERE date < CURRENT_DATE";
 const deleteByUser = "DELETE FROM createpass WHERE user_id = $1";
 const getPassList = "SELECT * FROM createpass";
+const getPassOrder = "SELECT * FROM createpass WHERE user_id = $1";
 
 module.exports = {
   createOrder,
   deleteExpOrder,
   deleteByUser,
   getPassList,
+  getPassOrder,
 };

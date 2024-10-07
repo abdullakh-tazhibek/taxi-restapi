@@ -4,53 +4,59 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 
-const register = (req, res) => {
+const register = async (req, res) => {
   const { role, name, email, phone, country, password } = req.body;
-  pool.query(
-    queries.isEmailPhoneExists,
-    [email, phone],
-    async (error, results) => {
-      if (results.rows.length) {
-        return res.send("Қолданушы жүйеде тіркелген!");
-      }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const emailPhoneCheck = await pool.query(queries.isEmailPhoneExists, [
+      email,
+      phone,
+    ]);
 
-      pool.query(
-        "INSERT INTO users (role, name, email, phone, country, password) VALUES ($1, $2, $3, $4, $5, $6)",
-        [role, name, email, phone, country, hashedPassword],
-        (error, results) => {
-          if (error) {
-            throw error;
-          }
-          res.status(201).send("Қолданушы тіркелді!");
-        }
-      );
+    if (emailPhoneCheck.rows.length > 0) {
+      return res.status(400).json({
+        message: "Қолданушы жүйеде тіркелген!",
+      });
     }
-  );
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      "INSERT INTO users (role, name, email, phone, country, password) VALUES ($1, $2, $3, $4, $5, $6)",
+      [role, name, email, phone, country, hashedPassword]
+    );
+
+    res.status(201).json({ message: "Қолданушы тіркелді!" });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).json({ message: "Server error, please try again later." });
+  }
 };
 
 const login = (req, res) => {
   const { phone, password } = req.body;
   pool.query(queries.isUserExists, [phone], async (error, results) => {
-    if (!results.rows.length) {
-      return res.send("Нөмір немесе құпиясөз қате жазылды!");
+    if (error) {
+      return res.status(500).json({ error: "Server error" });
     }
-
+    if (!results || !results.rows.length) {
+      return res
+        .status(401)
+        .json({ message: "Нөмір немесе құпиясөз қате жазылды!" });
+    }
     const user = results.rows[0];
     const validPassword = await bcrypt.compare(password, user.password);
-
     if (!validPassword) {
-      return res.send("Нөмір немесе құпиясөз қате жазылды!");
+      return res
+        .status(401)
+        .json({ message: "Нөмір немесе құпиясөз қате жазылды!" });
     }
-
     const token = jwt.sign(
       { id: user.id, phone: user.phone },
       "your_jwt_secret",
       { expiresIn: "1h" }
     );
-
-    res.json({ token });
+    res.status(200).json({ token });
   });
 };
 
@@ -78,7 +84,6 @@ const changeRole = (req, res) => {
 
 const activateAccount = (req, res) => {
   const { id, paymentOption } = req.body;
-
   pool.query(
     queries.updateActivation,
     [paymentoption, id],
@@ -93,18 +98,24 @@ const activateAccount = (req, res) => {
 
 const getActivationExpiry = (req, res) => {
   const { userId } = req.body;
-
   pool.query(queries.getActivationExpiry, [userId], (error, results) => {
     if (error) {
       return res.status(500).json({ error: "Server error" });
     }
-
     if (results.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
-
     const expiryDate = results.rows[0].account_activated_until;
     res.status(200).json({ expiryDate });
+  });
+};
+
+const getData = (req, res) => {
+  pool.query("SELECT * FROM users", (error, results) => {
+    if (error) {
+      throw error;
+    }
+    res.status(200).json(results.rows);
   });
 };
 
@@ -115,4 +126,6 @@ module.exports = {
   changeRole,
   activateAccount,
   getActivationExpiry,
+
+  getData,
 };
