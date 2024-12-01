@@ -14,7 +14,7 @@ cron.schedule("0 0 * * *", () => {
 });
 
 const createOrder = async (req, res) => {
-  const { location1, location2, date, comment, price } = req.body;
+  const { location1, location2, date, comment, price, option } = req.body;
   try {
     await pool.query(queries.createOrder, [
       location1,
@@ -22,6 +22,7 @@ const createOrder = async (req, res) => {
       date,
       comment,
       price,
+      option,
     ]);
     res.status(201).send("Сіздің тапсырысыңыз сәтті жарияланды!");
   } catch (error) {

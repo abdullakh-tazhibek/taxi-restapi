@@ -1,4 +1,4 @@
-CREATE TYPE user_role AS ENUM ('жолаушы', 'жүргізуші');
+CREATE TYPE user_role AS ENUM ('passenger', 'driver');
 
 CREATE TABLE users(
     id SERIAL NOT NULL PRIMARY KEY,
@@ -19,6 +19,7 @@ CREATE TABLE createpass(
     date VARCHAR(30),
     comment VARCHAR(255),
     price INTEGER,
+    option VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -31,6 +32,7 @@ CREATE TABLE deliverypass(
     date VARCHAR(30),
     comment VARCHAR(255),
     price INTEGER,
+    option VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

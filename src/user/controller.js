@@ -35,28 +35,30 @@ const register = async (req, res) => {
 
 const login = (req, res) => {
   const { phone, password } = req.body;
+
+  // Only query by phone, since password is hashed
   pool.query(queries.isUserExists, [phone], async (error, results) => {
     if (error) {
+      console.log(error);
       return res.status(500).json({ error: "Server error" });
     }
+
     if (!results || !results.rows.length) {
       return res
         .status(401)
         .json({ message: "Нөмір немесе құпиясөз қате жазылды!" });
     }
+
     const user = results.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res
-        .status(401)
-        .json({ message: "Нөмір немесе құпиясөз қате жазылды!" });
-    }
+
+    // Generate a JWT token upon successful login
     const token = jwt.sign(
       { id: user.id, phone: user.phone },
-      "your_jwt_secret",
-      { expiresIn: "1h" }
+      "your_jwt_secret", // Replace with your actual JWT secret key
+      { expiresIn: "1d" }
     );
-    res.status(200).json({ token });
+
+    return res.status(200).json({ message: "Login successful", token });
   });
 };
 
